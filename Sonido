@@ -1,0 +1,95 @@
+package com.example.sonido;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.SoundPool;
+import android.os.Build;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+    private Button bReproducirTema, bPararTema, bReproducir1UP;
+    private MediaPlayer mp;
+    private SoundPool sp;
+    private int flujodemusica = 0;
+    private boolean loaded = false;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // ***** Ligo los recursos de la actividad *****
+        bReproducirTema = (Button)findViewById(R.id.bReproducirTema);
+        bPararTema = (Button)findViewById(R.id.bPararTema);
+        bReproducir1UP = (Button)findViewById(R.id.bReproducir1UP);
+        // ************************************************
+        bReproducirTema.setOnClickListener(this);
+        bPararTema.setOnClickListener(this);
+        bReproducir1UP.setOnClickListener(this);
+
+        // Hago que la app nivele el volumen con los botones físicos
+        // del dispositivo
+        this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+
+        // Creo el sonido del SoundPool
+        crearSoundPool(R.raw.vida);
+    }
+
+    @Override
+    public void onClick(View view)
+    {
+        switch (view.getId())
+        {
+            case R.id.bReproducirTema:
+                // Mediaplayer.create(Context, int Id_Sound);
+                mp = MediaPlayer.create(this, R.raw.supermariobrostheme);
+                mp.start();
+                break;
+            case R.id.bPararTema:
+                // Paro el sonido
+                mp.stop();
+                // Libero los recursos del sonido
+                mp.release();
+                break;
+            case R.id.bReproducir1UP:
+                // sp.play(soundID, leftVolume, rightVolume, priority, loop, rate);
+                sp.play(flujodemusica, 1, 1, 0, 0, 1);
+                break;
+        }
+    }
+
+    /**
+     * Prepara un sonido para ser reproducido
+     * @param sonido Identificador del sonido a reproducir
+     */
+    private void crearSoundPool(int sonido)
+    {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+        {
+            AudioAttributes attributes = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_GAME)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build();
+            sp = new SoundPool.Builder()
+                    .setAudioAttributes(attributes)
+                    .build();
+        }
+        else
+        {
+            sp = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
+        }
+        flujodemusica = sp.load(this, R.raw.vida, 1);
+        sp.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            public void onLoadComplete(SoundPool soundPool, int sampleId,int status)
+            {
+                loaded = true;
+            }
+        });
+    }
+}
